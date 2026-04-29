@@ -2,10 +2,11 @@ import { ref, reactive } from "vue";
 import { Pain } from "../entities/Pain";
 import { buildGrid } from "./useGrid";
 import { Naruto } from "../entities/Naruto";
+import { Sasuke } from "../entities/Sasuke";
 import { preloadImages } from "./useSprite";
 
 export function preloadUnitSprites() {
-  return preloadImages([Naruto.SPRITE, Pain.SPRITE]);
+  return preloadImages([Naruto.SPRITE, Pain.SPRITE, Sasuke.SPRITE]);
 }
 
 export const phase = ref("PREP"); // 'PREP' | 'BATTLE' | 'ENDED'
@@ -15,7 +16,7 @@ export const playerUnits = reactive([]);
 export const enemyUnits = reactive([]);
 export const roundResult = ref(""); // 'VITÓRIA!' | 'DERROTA...'
 export const GRID = buildGrid();
-export const SHOP_UNITS = [Naruto, Pain];
+export const SHOP_UNITS = [Naruto, Pain, Sasuke];
 
 export async function spawnEnemyUnits() {
   enemyUnits.splice(0);
