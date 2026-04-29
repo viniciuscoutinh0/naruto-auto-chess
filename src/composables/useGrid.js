@@ -16,7 +16,7 @@ export function buildGrid() {
   return { size: SIZE, offsetX: OFFSET_X, offsetY: OFFSET_Y, cells };
 }
 
-export function snapToGrid(grid, nx, ny) {
+export function findClosestCell(grid, nx, ny) {
   let closest = grid.cells[0];
   let minDist = Infinity;
 
@@ -28,5 +28,10 @@ export function snapToGrid(grid, nx, ny) {
     }
   });
 
+  return closest;
+}
+
+export function snapToGrid(grid, nx, ny) {
+  const closest = findClosestCell(grid, nx, ny);
   return { x: closest.x - 45, y: closest.y - 80 };
 }

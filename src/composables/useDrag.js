@@ -51,5 +51,5 @@ export function useDrag(canvasRef, grid) {
     window.removeEventListener("mouseup", onMouseUp);
   }
 
-  return { attachListeners, detachListeners };
+  return { attachListeners, detachListeners, selectedNinja };
 }

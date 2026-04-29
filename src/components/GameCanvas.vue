@@ -2,11 +2,31 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useSprite } from '../composables/useSprite'
 import { useDrag } from '../composables/useDrag'
-import { playerUnits, enemyUnits, checkRoundEnd, spawnEnemyUnits, GRID } from '../composables/useGame'
+import { findClosestCell } from '../composables/useGrid'
+import { playerUnits, enemyUnits, checkRoundEnd, spawnEnemyUnits, preloadUnitSprites, GRID } from '../composables/useGame'
 
 const container = ref(null)
 const { background, loadBackground } = useSprite()
 let animFrameId = null
+
+const drawDropHighlights = (context) => {
+  const dragged = selectedNinja.value
+  if (!dragged) return
+
+  const target = findClosestCell(GRID, dragged.x, dragged.y)
+  const radius = GRID.size * 0.55
+
+  GRID.cells.forEach((cell) => {
+    const isTarget = cell === target
+    context.beginPath()
+    context.ellipse(cell.x, cell.y, radius, radius * 0.5, 0, 0, Math.PI * 2)
+    context.fillStyle = isTarget ? 'rgba(234, 179, 8, 0.35)' : 'rgba(234, 179, 8, 0.08)'
+    context.fill()
+    context.lineWidth = isTarget ? 2.5 : 1
+    context.strokeStyle = isTarget ? 'rgba(234, 179, 8, 0.95)' : 'rgba(234, 179, 8, 0.4)'
+    context.stroke()
+  })
+}
 
 const gameLoop = () => {
   const canvas = container.value
@@ -17,6 +37,8 @@ const gameLoop = () => {
   background.value
     ? context.drawImage(background.value, 0, 0, canvas.width, canvas.height)
     : context.clearRect(0, 0, canvas.width, canvas.height)
+
+  drawDropHighlights(context)
 
     ;[...playerUnits]
       .sort((a, b) => a.y - b.y)
@@ -37,19 +59,13 @@ const gameLoop = () => {
   animFrameId = requestAnimationFrame(gameLoop)
 }
 
-const { attachListeners, detachListeners } = useDrag(container, GRID)
+const { attachListeners, detachListeners, selectedNinja } = useDrag(container, GRID)
 
 onMounted(async () => {
   attachListeners()
 
-  await loadBackground()
-  spawnEnemyUnits()
-
-  // carrega sprites uma única vez antes do loop começar
-  await Promise.all(
-    [...playerUnits, ...enemyUnits].map(n => n.loadSprite())
-  )
-
+  await Promise.all([loadBackground(), preloadUnitSprites()])
+  await spawnEnemyUnits()
 
   gameLoop()
 })

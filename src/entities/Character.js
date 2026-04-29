@@ -1,8 +1,8 @@
 import { phase } from "../composables/useGame.js";
+import { loadImage } from "../composables/useSprite.js";
 import { CharacterState } from "./CharacterState.js";
 
 const ANIMATION_SPEED = 10;
-const ANIMATION_FRAMES = 5;
 const MOVE_SPEED = 2.2;
 const ATTACK_RANGE = 40;
 
@@ -77,21 +77,15 @@ export class BaseCharacter {
 
   async loadSprite() {
     if (!this.config?.sprite) return;
-
-    const image = new Image();
-
-    image.src = this.config.sprite;
-
-    await new Promise((resolve) => (image.onload = resolve));
-
-    this.sprite = image;
+    this.sprite = await loadImage(this.config.sprite);
   }
 
   _advanceAnimation() {
     this.tick++;
 
     if (this.tick >= ANIMATION_SPEED) {
-      this.frame = (this.frame + 1) % ANIMATION_FRAMES;
+      const frames = this.config?.animations?.[this.state]?.frames ?? 1;
+      this.frame = (this.frame + 1) % frames;
       this.tick = 0;
     }
   }
@@ -145,29 +139,33 @@ export class BaseCharacter {
       return;
     }
 
-    const row = this.config.animations[this.state] ?? 0;
+    const anim = this.config.animations[this.state];
+    if (!anim) return;
+
+    const drawX = this.x + (this.config.width - anim.frameWidth) / 2;
+    const drawY = this.y + (this.config.height - anim.frameHeight);
 
     context.save();
 
     if (this.team === "enemy") {
-      context.translate(this.x + this.config.width, this.y);
+      context.translate(drawX + anim.frameWidth, drawY);
       context.scale(-1, 1);
     } else {
-      context.translate(this.x, this.y);
+      context.translate(drawX, drawY);
     }
 
     context.imageSmoothingEnabled = false;
 
     context.drawImage(
       sprite,
-      this.frame * this.config.width,
-      row * this.config.height,
-      this.config.width,
-      this.config.height,
+      this.frame * anim.frameWidth,
+      anim.row * anim.frameHeight,
+      anim.frameWidth,
+      anim.frameHeight,
       0,
       0,
-      this.config.width,
-      this.config.height,
+      anim.frameWidth,
+      anim.frameHeight,
     );
 
     context.restore();

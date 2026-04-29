@@ -1,21 +1,31 @@
 <script setup>
 import { computed } from 'vue'
-import { phase, playerUnits, buyUnit, start } from '../composables/useGame'
+import { phase, gold, playerUnits, buyUnit, start, SHOP_UNITS } from '../composables/useGame'
 
-const canBuy = computed(() => phase.value === 'PREP')
-const canFight = computed(() => phase.value === 'PREP' && playerUnits.length > 0)
+const isPrep = computed(() => phase.value === 'PREP')
+const canFight = computed(() => isPrep.value && playerUnits.length > 0)
+const canAfford = (unit) => isPrep.value && gold.value >= unit.COST
 </script>
 
 <template>
   <div class="shop-bar">
     <!-- Loja de unidades -->
     <div class="shop-panel">
-      <button class="unit-card" :disabled="!canBuy" @click="buyUnit">
-        <div class="unit-name">PAIN</div>
-        <div class="unit-cost">Custo: 3G</div>
+      <button
+        v-for="unit in SHOP_UNITS"
+        :key="unit.DISPLAY_NAME"
+        class="unit-card"
+        :disabled="!canAfford(unit)"
+        @click="buyUnit(unit)"
+      >
+        <div class="unit-name">{{ unit.DISPLAY_NAME.toUpperCase() }}</div>
+        <div class="unit-cost">Custo: {{ unit.COST }}G</div>
+        <div class="unit-stats">
+          <span>HP {{ unit.STATS.hp }}</span>
+          <span>ATK {{ unit.STATS.attack }}</span>
+        </div>
         <div class="unit-buy-label">COMPRAR</div>
       </button>
-      <span class="shop-hint">Mais Akatsuki em breve...</span>
     </div>
 
     <!-- Botão lutar -->
@@ -82,6 +92,15 @@ const canFight = computed(() => phase.value === 'PREP' && playerUnits.length > 0
   text-transform: uppercase;
 }
 
+.unit-stats {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: #d4d4d8;
+  font-weight: 600;
+}
+
 .unit-buy-label {
   margin-top: 0.75rem;
   background: rgba(202, 138, 4, 0.2);
@@ -91,12 +110,6 @@ const canFight = computed(() => phase.value === 'PREP' && playerUnits.length > 0
   text-align: center;
   padding: 0.2rem 0;
   border-radius: 0.25rem;
-}
-
-.shop-hint {
-  color: #3f3f46;
-  font-style: italic;
-  font-size: 0.875rem;
 }
 
 .btn-fight {
